@@ -2,7 +2,9 @@ package ldapserver
 
 import (
 	"bufio"
+	"log"
 	"net"
+	"runtime"
 	"sync"
 	"time"
 	"strconv"
@@ -58,6 +60,13 @@ func (c *client) ReadPacket() (*messagePacket, error) {
 }
 
 func (c *client) serve() {
+	defer func() { //recover panic
+		if err := recover(); err != nil {
+			var buf [4096]byte
+			n := runtime.Stack(buf[:], false)
+			log.Println(string(buf[:n]))
+		}
+	}()
 	defer c.close()
 
 	c.closing = make(chan bool)
